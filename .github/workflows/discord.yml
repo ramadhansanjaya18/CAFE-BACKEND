@@ -1,4 +1,4 @@
-name: Discord Notification
+name: Discord Professional Notification
 
 on:
   push:
@@ -6,14 +6,41 @@ on:
       - main
       - develop
       - feature/**
+  pull_request:
+    types: [opened, closed]
 
 jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Send Discord Notification
+      - name: Send Professional Discord Notification
         run: |
+          REPO="${{ github.repository }}"
+          AUTHOR="${{ github.actor }}"
+          BRANCH="${{ github.ref_name }}"
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          COMMIT_URL="${{ github.event.head_commit.url }}"
+          COMMIT_COUNT="${{ github.event.commits.size }}"
+          EVENT="${{ github.event_name }}"
+
           curl -H "Content-Type: application/json" \
           -X POST \
-          -d "{\"content\":\"🚀 New push detected in CAFE-BACKEND repository\"}" \
+          -d "{
+            \"embeds\": [{
+              \"title\": \"📦 ${REPO}\",
+              \"color\": 3447003,
+              \"fields\": [
+                {\"name\": \"👤 Author\", \"value\": \"${AUTHOR}\", \"inline\": true},
+                {\"name\": \"🌿 Branch\", \"value\": \"${BRANCH}\", \"inline\": true},
+                {\"name\": \"📌 Event\", \"value\": \"${EVENT}\", \"inline\": true},
+                {\"name\": \"📝 Commit Message\", \"value\": \"${COMMIT_MSG}\"},
+                {\"name\": \"🔢 Total Commits\", \"value\": \"${COMMIT_COUNT}\", \"inline\": true}
+              ],
+              \"url\": \"${COMMIT_URL}\",
+              \"footer\": {
+                \"text\": \"CoffeeJob Dev Team • GitHub Automation\"
+              },
+              \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+            }]
+          }" \
           ${{ secrets.DISCORD_WEBHOOK }}
