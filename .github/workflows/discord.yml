@@ -1,4 +1,4 @@
-name: Discord Smart Notification
+name: Backend Discord Notification
 
 on:
   push:
@@ -13,57 +13,53 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Send Smart Discord Notification
+      - name: Send Backend Notification
         run: |
-          REPO="${{ github.repository }}"
+          REPO="CAFE-BACKEND"
           AUTHOR="${{ github.actor }}"
-          EVENT="${{ github.event_name }}"
           BRANCH="${{ github.ref_name }}"
+          EVENT="${{ github.event_name }}"
           TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
-          # Default values
           COLOR=3447003
-          TITLE="🚀 New Push"
-          DESCRIPTION="${{ github.event.head_commit.message }}"
+          ICON="🔵"
+          TITLE="Backend Update"
+          MESSAGE="${{ github.event.head_commit.message }}"
           URL="${{ github.event.head_commit.url }}"
 
-          # If push to main → warning red
           if [ "$BRANCH" = "main" ] && [ "$EVENT" = "push" ]; then
             COLOR=15158332
-            TITLE="🚨 PUSH TO MAIN"
+            ICON="🚨"
+            TITLE="Backend Push to Main"
           fi
 
-          # Pull Request opened
           if [ "$EVENT" = "pull_request" ] && [ "${{ github.event.action }}" = "opened" ]; then
             COLOR=15844367
-            TITLE="🟡 Pull Request Opened"
-            DESCRIPTION="${{ github.event.pull_request.title }}"
+            ICON="🟡"
+            TITLE="Backend PR Opened"
+            MESSAGE="${{ github.event.pull_request.title }}"
             URL="${{ github.event.pull_request.html_url }}"
           fi
 
-          # Pull Request merged
-          if [ "$EVENT" = "pull_request" ] && [ "${{ github.event.pull_request.merged }}" = "true" ]; then
+          if [ "${{ github.event.pull_request.merged }}" = "true" ]; then
             COLOR=3066993
-            TITLE="🟢 Pull Request Merged"
-            DESCRIPTION="${{ github.event.pull_request.title }}"
+            ICON="🟢"
+            TITLE="Backend PR Merged"
+            MESSAGE="${{ github.event.pull_request.title }}"
             URL="${{ github.event.pull_request.html_url }}"
           fi
 
-          curl -H "Content-Type: application/json" \
-          -X POST \
-          -d "{
+          curl -H "Content-Type: application/json" -X POST -d "{
             \"embeds\": [{
-              \"title\": \"${TITLE}\",
-              \"description\": \"**${DESCRIPTION}**\",
+              \"title\": \"${ICON} ${TITLE}\",
+              \"description\": \"\`${MESSAGE}\`\",
               \"color\": ${COLOR},
               \"fields\": [
-                {\"name\": \"📦 Repository\", \"value\": \"${REPO}\", \"inline\": true},
                 {\"name\": \"👤 Author\", \"value\": \"${AUTHOR}\", \"inline\": true},
                 {\"name\": \"🌿 Branch\", \"value\": \"${BRANCH}\", \"inline\": true}
               ],
-              \"url\": \"${URL}\",
               \"footer\": {
-                \"text\": \"CoffeeJob Dev Team • Automated DevOps\"
+                \"text\": \"CoffeeJob Dev Team • Backend Automation\"
               },
               \"timestamp\": \"${TIMESTAMP}\"
             }]
