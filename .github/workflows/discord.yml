@@ -1,4 +1,4 @@
-name: Discord Professional Notification
+name: Discord Smart Notification
 
 on:
   push:
@@ -13,44 +13,59 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Send Clean Discord Embed
+      - name: Send Smart Discord Notification
         run: |
           REPO="${{ github.repository }}"
           AUTHOR="${{ github.actor }}"
-          BRANCH="${{ github.ref_name }}"
-          COMMIT_MSG="${{ github.event.head_commit.message }}"
-          COMMIT_URL="${{ github.event.head_commit.url }}"
           EVENT="${{ github.event_name }}"
+          BRANCH="${{ github.ref_name }}"
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          # Default values
+          COLOR=3447003
+          TITLE="🚀 New Push"
+          DESCRIPTION="${{ github.event.head_commit.message }}"
+          URL="${{ github.event.head_commit.url }}"
+
+          # If push to main → warning red
+          if [ "$BRANCH" = "main" ] && [ "$EVENT" = "push" ]; then
+            COLOR=15158332
+            TITLE="🚨 PUSH TO MAIN"
+          fi
+
+          # Pull Request opened
+          if [ "$EVENT" = "pull_request" ] && [ "${{ github.event.action }}" = "opened" ]; then
+            COLOR=15844367
+            TITLE="🟡 Pull Request Opened"
+            DESCRIPTION="${{ github.event.pull_request.title }}"
+            URL="${{ github.event.pull_request.html_url }}"
+          fi
+
+          # Pull Request merged
+          if [ "$EVENT" = "pull_request" ] && [ "${{ github.event.pull_request.merged }}" = "true" ]; then
+            COLOR=3066993
+            TITLE="🟢 Pull Request Merged"
+            DESCRIPTION="${{ github.event.pull_request.title }}"
+            URL="${{ github.event.pull_request.html_url }}"
+          fi
 
           curl -H "Content-Type: application/json" \
           -X POST \
           -d "{
             \"embeds\": [{
-              \"title\": \"🚀 ${REPO}\",
-              \"description\": \"**${COMMIT_MSG}**\",
-              \"color\": 3447003,
+              \"title\": \"${TITLE}\",
+              \"description\": \"**${DESCRIPTION}**\",
+              \"color\": ${COLOR},
               \"fields\": [
-                {
-                  \"name\": \"👤 Author\",
-                  \"value\": \"${AUTHOR}\",
-                  \"inline\": true
-                },
-                {
-                  \"name\": \"🌿 Branch\",
-                  \"value\": \"${BRANCH}\",
-                  \"inline\": true
-                },
-                {
-                  \"name\": \"📌 Event\",
-                  \"value\": \"${EVENT}\",
-                  \"inline\": true
-                }
+                {\"name\": \"📦 Repository\", \"value\": \"${REPO}\", \"inline\": true},
+                {\"name\": \"👤 Author\", \"value\": \"${AUTHOR}\", \"inline\": true},
+                {\"name\": \"🌿 Branch\", \"value\": \"${BRANCH}\", \"inline\": true}
               ],
-              \"url\": \"${COMMIT_URL}\",
+              \"url\": \"${URL}\",
               \"footer\": {
-                \"text\": \"CoffeeJob Dev Team • GitHub Automation\"
+                \"text\": \"CoffeeJob Dev Team • Automated DevOps\"
               },
-              \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+              \"timestamp\": \"${TIMESTAMP}\"
             }]
           }" \
           ${{ secrets.DISCORD_WEBHOOK }}
