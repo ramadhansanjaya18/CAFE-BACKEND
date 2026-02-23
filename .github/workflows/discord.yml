@@ -13,28 +13,38 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Send Professional Discord Notification
+      - name: Send Clean Discord Embed
         run: |
           REPO="${{ github.repository }}"
           AUTHOR="${{ github.actor }}"
           BRANCH="${{ github.ref_name }}"
           COMMIT_MSG="${{ github.event.head_commit.message }}"
           COMMIT_URL="${{ github.event.head_commit.url }}"
-          COMMIT_COUNT="${{ github.event.commits.size }}"
           EVENT="${{ github.event_name }}"
 
           curl -H "Content-Type: application/json" \
           -X POST \
           -d "{
             \"embeds\": [{
-              \"title\": \"📦 ${REPO}\",
+              \"title\": \"🚀 ${REPO}\",
+              \"description\": \"**${COMMIT_MSG}**\",
               \"color\": 3447003,
               \"fields\": [
-                {\"name\": \"👤 Author\", \"value\": \"${AUTHOR}\", \"inline\": true},
-                {\"name\": \"🌿 Branch\", \"value\": \"${BRANCH}\", \"inline\": true},
-                {\"name\": \"📌 Event\", \"value\": \"${EVENT}\", \"inline\": true},
-                {\"name\": \"📝 Commit Message\", \"value\": \"${COMMIT_MSG}\"},
-                {\"name\": \"🔢 Total Commits\", \"value\": \"${COMMIT_COUNT}\", \"inline\": true}
+                {
+                  \"name\": \"👤 Author\",
+                  \"value\": \"${AUTHOR}\",
+                  \"inline\": true
+                },
+                {
+                  \"name\": \"🌿 Branch\",
+                  \"value\": \"${BRANCH}\",
+                  \"inline\": true
+                },
+                {
+                  \"name\": \"📌 Event\",
+                  \"value\": \"${EVENT}\",
+                  \"inline\": true
+                }
               ],
               \"url\": \"${COMMIT_URL}\",
               \"footer\": {
